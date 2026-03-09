@@ -44,46 +44,4 @@ const getUser = (req, res) => {
     });
 };
 
-const updateUser = (req, res) => {
-  const { userId } = req.params;
-  const { name, avatar } = req.body;
-  User.findByIdAndUpdate(userId, { name, avatar }, { new: true })
-    .orFail()
-    .then((user) => {
-      res.status(200).send(user);
-    })
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
-      }
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
-      }
-      if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
-      }
-      return res.status(SERVER_ERROR).send({ message: err.message });
-    });
-};
-
-const deleteUser = (req, res) => {
-  const { userId } = req.params;
-  User.findByIdAndRemove(userId)
-    .orFail()
-    .then(() => {
-      res.status(200).send({ message: "User deleted successfully" });
-    })
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: err.message });
-      }
-      if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: err.message });
-      }
-      return res.status(SERVER_ERROR).send({ message: err.message });
-    });
-};
-
-module.exports = { getUsers, createUser, getUser, updateUser, deleteUser };
+module.exports = { getUsers, createUser, getUser };

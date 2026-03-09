@@ -1,5 +1,4 @@
 const express = require("express");
-const { parserOptions } = require("./.eslintrc");
 const app = express();
 const { PORT = 3001 } = process.env;
 const mongoose = require("mongoose");
