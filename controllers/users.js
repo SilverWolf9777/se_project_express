@@ -1,5 +1,13 @@
 const User = require("../models/user");
-const { BAD_REQUEST, NOT_FOUND, SERVER_ERROR } = require("../utils/errors");
+const {
+  BAD_REQUEST,
+  NOT_FOUND,
+  SERVER_ERROR,
+  ALREADY_EXISTS,
+} = require("../utils/errors");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const { JWT_SECRET } = require("../utils/config");
 
 const getUsers = (req, res) => {
   User.find({})
@@ -8,25 +16,69 @@ const getUsers = (req, res) => {
     })
     .catch((err) => {
       console.error(err);
-      return res.status(SERVER_ERROR).send({ message: "An error has occurred on the server." });
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
-const createUser = (req, res) => {
-  const { name, avatar } = req.body;
-  User.create({ name, avatar })
-    .then((user) => res.status(201).send(user))
-    .catch((err) => {
-      console.error(err);
-      if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+const createUser = async (req, res) => {
+  try {
+    const { name, avatar, email, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await User.create({
+      name,
+      avatar,
+      email,
+      password: hashedPassword,
+    });
+    const userWithoutPassword = user.toObject();
+    delete userWithoutPassword.password;
+    return res.status(201).send(userWithoutPassword);
+  } catch (err) {
+    console.error(err);
+    if (err.code === 11000) {
+      return res
+        .status(ALREADY_EXISTS)
+        .send({ message: "Email Already Exists" });
+    }
+    if (err.name === "ValidationError") {
+      return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+    }
+    return res
+      .status(SERVER_ERROR)
+      .send({ message: "An error has occurred on the server." });
+  }
+};
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+  let foundUser;
+  User.findOne({ email })
+    .select("+password")
+    .then((user) => {
+      if (!user) {
+        return Promise.reject(new Error("Incorrect email or password"));
       }
-      return res.status(SERVER_ERROR).send({ message: "An error has occurred on the server." });
+      foundUser = user;
+      return bcrypt.compare(password, user.password);
+    })
+    .then((matched) => {
+      if (!matched) {
+        return Promise.reject(new Error("Incorrect email or password"));
+      }
+      const token = jwt.sign({ _id: foundUser._id }, JWT_SECRET, {
+        expiresIn: "7d",
+      });
+      res.send({ token });
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
     });
 };
 
-const getUser = (req, res) => {
-  const { userId } = req.params;
+const getCurrentUser = (req, res) => {
+  const userId = req.user._id;
   User.findById(userId)
     .orFail()
     .then((user) => {
@@ -40,8 +92,42 @@ const getUser = (req, res) => {
       if (err.name === "DocumentNotFoundError") {
         return res.status(NOT_FOUND).send({ message: "Not found" });
       }
-      return res.status(SERVER_ERROR).send({ message: "An error has occurred on the server." });
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
-module.exports = { getUsers, createUser, getUser };
+const updateUser = async (req, res) => {
+  const userId = req.user._id;
+  const { name, avatar } = req.body;
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name, avatar },
+      { new: true, runValidators: true }
+    ).orFail();
+
+    res.status(200).send(updatedUser);
+  } catch (err) {
+    console.error(err);
+
+    if (err.name === "ValidationError") {
+      return res.status(400).send({ message: "Invalid data" });
+    }
+
+    if (err.code === 11000) {
+      return res.status(409).send({ message: "Email already exists" });
+    }
+
+    if (err.name === "DocumentNotFoundError") {
+      return res.status(404).send({ message: "User not found" });
+    }
+
+    return res
+      .status(500)
+      .send({ message: "An error has occurred on the server." });
+  }
+};
+
+module.exports = { getUsers, createUser, getCurrentUser, updateUser, login };

@@ -16,12 +16,12 @@ mongoose
 app.use(express.json());
 
 // Temporary authorization middleware
-app.use((req, res, next) => {
-  req.user = {
-    _id: "5d8b8592978f8bd833ca8133", // Replace with actual test user ID
-  };
-  next();
-});
+// app.use((req, res, next) => {
+//   req.user = {
+//     _id: "5d8b8592978f8bd833ca8133", // Replace with actual test user ID
+//   };
+//   next();
+// });
 
 app.use("/", mainRouter);
 
