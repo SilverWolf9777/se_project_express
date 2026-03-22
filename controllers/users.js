@@ -54,6 +54,7 @@ const createUser = async (req, res) => {
 const login = (req, res) => {
   const { email, password } = req.body;
   let foundUser;
+
   User.findOne({ email })
     .select("+password")
     .then((user) => {
@@ -67,13 +68,25 @@ const login = (req, res) => {
       if (!matched) {
         return Promise.reject(new Error("Incorrect email or password"));
       }
+
       const token = jwt.sign({ _id: foundUser._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
+
       res.send({ token });
     })
     .catch((err) => {
-      res.status(401).send({ message: err.message });
+      console.error(err);
+
+      if (err.message === "Incorrect email or password") {
+        return res
+          .status(AUTHORIZATION_REQUIRED)
+          .send({ message: "Incorrect email or password" });
+      }
+
+      return res
+        .status(SERVER_ERROR)
+        .send({ message: "An error has occurred on the server." });
     });
 };
 
@@ -113,19 +126,21 @@ const updateUser = async (req, res) => {
     console.error(err);
 
     if (err.name === "ValidationError") {
-      return res.status(400).send({ message: "Invalid data" });
+      return res.status(BAD_REQUEST).send({ message: "Invalid data" });
     }
 
     if (err.code === 11000) {
-      return res.status(409).send({ message: "Email already exists" });
+      return res
+        .status(ALREADY_EXISTS)
+        .send({ message: "Email already exists" });
     }
 
     if (err.name === "DocumentNotFoundError") {
-      return res.status(404).send({ message: "User not found" });
+      return res.status(NOT_FOUND).send({ message: "User not found" });
     }
 
     return res
-      .status(500)
+      .status(SERVER_ERROR)
       .send({ message: "An error has occurred on the server." });
   }
 };
