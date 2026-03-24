@@ -10,9 +10,13 @@ const { NOT_FOUND } = require("./utils/errors");
 mongoose
   .connect("mongodb://127.0.0.1:27017/wtwr_db")
   .then(() => {
+    // eslint-disable-next-line no-console
     console.log("Connected to DB");
   })
-  .catch(console.error);
+  .catch(
+    // eslint-disable-next-line no-console
+    console.error
+  );
 
 app.use(cors());
 app.use(express.json());
@@ -24,5 +28,6 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`listening on ${PORT}`);
 });

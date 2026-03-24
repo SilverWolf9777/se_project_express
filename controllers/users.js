@@ -1,12 +1,14 @@
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
 const User = require("../models/user");
 const {
   BAD_REQUEST,
   NOT_FOUND,
   SERVER_ERROR,
   ALREADY_EXISTS,
+  AUTHORIZATION_REQUIRED,
 } = require("../utils/errors");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const { JWT_SECRET } = require("../utils/config");
 
 const getUsers = (req, res) => {
@@ -73,7 +75,7 @@ const login = (req, res) => {
         expiresIn: "7d",
       });
 
-      res.send({ token });
+      return res.send({ token });
     })
     .catch((err) => {
       console.error(err);
@@ -121,7 +123,7 @@ const updateUser = async (req, res) => {
       { new: true, runValidators: true }
     ).orFail();
 
-    res.status(200).send(updatedUser);
+    return res.status(200).send(updatedUser);
   } catch (err) {
     console.error(err);
 

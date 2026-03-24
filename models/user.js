@@ -1,6 +1,6 @@
+const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const validator = require("validator");
-const bcrypt = require("bcrypt");
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true, minlength: 2, maxlength: 30 },
@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, "The avatar field is required"],
     validate: {
-      validator(value) {
+      validator: function validateURL(value) {
         return validator.isURL(value);
       },
     },
@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
     validate: {
-      validator: (v) => validator.isEmail(v),
+      validator: (value) => validator.isEmail(value),
       message: "You must enter a valid email",
     },
   },
@@ -29,7 +29,10 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
 });
-userSchema.statics.findUserByCredentials = function (email, password) {
+userSchema.statics.findUserByCredentials = function findUserByCredentials(
+  email,
+  password
+) {
   return this.findOne({ email })
     .select("+password")
     .then((user) => {
