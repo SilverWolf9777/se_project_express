@@ -55,23 +55,10 @@ const createUser = async (req, res) => {
 
 const login = (req, res) => {
   const { email, password } = req.body;
-  let foundUser;
 
-  User.findOne({ email })
-    .select("+password")
+  User.findUserByCredentials(email, password)
     .then((user) => {
-      if (!user) {
-        return Promise.reject(new Error("Incorrect email or password"));
-      }
-      foundUser = user;
-      return bcrypt.compare(password, user.password);
-    })
-    .then((matched) => {
-      if (!matched) {
-        return Promise.reject(new Error("Incorrect email or password"));
-      }
-
-      const token = jwt.sign({ _id: foundUser._id }, JWT_SECRET, {
+      const token = jwt.sign({ _id: user._id }, JWT_SECRET, {
         expiresIn: "7d",
       });
 
@@ -116,6 +103,7 @@ const getCurrentUser = (req, res) => {
 const updateUser = async (req, res) => {
   const userId = req.user._id;
   const { name, avatar } = req.body;
+
   try {
     const updatedUser = await User.findByIdAndUpdate(
       userId,
@@ -129,12 +117,6 @@ const updateUser = async (req, res) => {
 
     if (err.name === "ValidationError") {
       return res.status(BAD_REQUEST).send({ message: "Invalid data" });
-    }
-
-    if (err.code === 11000) {
-      return res
-        .status(ALREADY_EXISTS)
-        .send({ message: "Email already exists" });
     }
 
     if (err.name === "DocumentNotFoundError") {
