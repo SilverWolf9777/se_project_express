@@ -1,75 +1,62 @@
 const clothingItem = require("../models/clothingItem");
+
 const {
-  BAD_REQUEST,
-  NOT_FOUND,
-  SERVER_ERROR,
-  FORBIDDEN,
+  BadRequestError,
+  NotFoundError,
+  ForbiddenError,
 } = require("../utils/errors");
 
-const getItems = (req, res) => {
+const getItems = (req, res, next) => {
   clothingItem
     .find({})
-    .then((items) => {
-      res.status(200).send(items);
-    })
-    .catch((err) => {
-      console.error(err);
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
-    });
+    .then((items) => res.status(200).send(items))
+    .catch(next);
 };
 
-const createItem = (req, res) => {
+const createItem = (req, res, next) => {
   const { name, weather, imageUrl } = req.body;
+
   clothingItem
     .create({ name, weather, imageUrl, owner: req.user._id })
-    .then((item) => {
-      res.status(201).send(item);
-    })
+    .then((item) => res.status(201).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "ValidationError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+        return next(new BadRequestError("Invalid data"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+      return next(err);
     });
 };
 
-const deleteItem = (req, res) => {
+const deleteItem = (req, res, next) => {
   const { itemId } = req.params;
+
   clothingItem
     .findById(itemId)
     .orFail()
     .then((item) => {
       if (item.owner.toString() !== req.user._id) {
-        return res
-          .status(FORBIDDEN)
-          .send({ message: "You are not allowed to delete this item." });
+        throw new ForbiddenError("You are not allowed to delete this item");
       }
 
-      return clothingItem.findByIdAndDelete(itemId).then(() => {
-        res.status(200).send({ message: "Item deleted successfully" });
-      });
+      return clothingItem.findByIdAndDelete(itemId);
+    })
+    .then(() => {
+      res.status(200).send({ message: "Item deleted successfully" });
     })
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+        return next(new BadRequestError("Invalid item ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Not found" });
+        return next(new NotFoundError("Item not found"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+      return next(err);
     });
 };
 
-const likeItem = (req, res) => {
+const likeItem = (req, res, next) => {
   const { itemId } = req.params;
+
   clothingItem
     .findByIdAndUpdate(
       itemId,
@@ -77,25 +64,21 @@ const likeItem = (req, res) => {
       { new: true }
     )
     .orFail()
-    .then((item) => {
-      res.status(200).send(item);
-    })
+    .then((item) => res.status(200).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+        return next(new BadRequestError("Invalid item ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Not found" });
+        return next(new NotFoundError("Item not found"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+      return next(err);
     });
 };
 
-const dislikeItem = (req, res) => {
+const dislikeItem = (req, res, next) => {
   const { itemId } = req.params;
+
   clothingItem
     .findByIdAndUpdate(
       itemId,
@@ -103,21 +86,38 @@ const dislikeItem = (req, res) => {
       { new: true }
     )
     .orFail()
-    .then((item) => {
-      res.status(200).send(item);
-    })
+    .then((item) => res.status(200).send(item))
     .catch((err) => {
-      console.error(err);
       if (err.name === "CastError") {
-        return res.status(BAD_REQUEST).send({ message: "Invalid data" });
+        return next(new BadRequestError("Invalid item ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return res.status(NOT_FOUND).send({ message: "Not found" });
+        return next(new NotFoundError("Item not found"));
       }
-      return res
-        .status(SERVER_ERROR)
-        .send({ message: "An error has occurred on the server." });
+      return next(err);
     });
 };
 
-module.exports = { getItems, createItem, deleteItem, likeItem, dislikeItem };
+module.exports = {
+  getItems,
+  createItem,
+  deleteItem,
+  likeItem,
+  dislikeItem,
+};
+
+
+server {
+  listen 80;
+
+  server_name wtwrsubdomainwoolf.jumpingcrab.com www.wtwrsubdomainwoolf.jumpingcrab.com api.wtwrsubdomainwoolf.jumpingcrab.com;
+
+  location / {
+    proxy_pass http://localhost:3001;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+}
