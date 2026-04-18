@@ -22,7 +22,12 @@ mongoose
     console.error
   );
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://wtwrsubdomainwoolf.jumpingcrab.com",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(requestLogger);
 app.get("/crash-test", () => {
