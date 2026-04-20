@@ -22,7 +22,7 @@ The server handles data validation, error handling with appropriate HTTP status 
 - **ESLint & Prettier** - Code linting and formatting tools
 - **Validator** - Library for URL validation in schema fields
 
-- Frontend: React, HTML, CSS, JavaScript, and React-Router can also be seen at [wtwrsubdomainwoolf.jumpingcrab.com](https://wtwrsubbmainwoolf.jumpingcrab.com/)
+- Frontend: React, HTML, CSS, JavaScript, and React-Router can also be seen at [wtwrsubdomainwoolf.jumpingcrab.com](https://wtwrsubbmainwoolf.jumpingcrab.com/) or here
   [on github](https://github.com/SilverWolf9777/se_project_react)
 - Backend: javascript [Link to backend found here](https://github.com/SilverWolf9777/se_project_express)
   run both using npm run dev in the terminal. Or can be seen at [https://api.wtwrsubdomainwoolf.jumpingcrab.com](https://api.wtwrsubdomainwoolf.jumpingcrab.com/)
