@@ -5,40 +5,18 @@ const NOT_FOUND = 404;
 const ALREADY_EXISTS = 409;
 const SERVER_ERROR = 500;
 
-class BadRequestError extends Error {
-  constructor(message) {
+class AppError extends Error {
+  constructor(message, statusCode = SERVER_ERROR) {
     super(message);
-    this.statusCode = BAD_REQUEST;
+    this.statusCode = statusCode;
   }
 }
 
-class UnauthorizedError extends Error {
-  constructor(message) {
-    super(message);
-    this.statusCode = AUTHORIZATION_REQUIRED;
-  }
-}
-
-class ForbiddenError extends Error {
-  constructor(message) {
-    super(message);
-    this.statusCode = FORBIDDEN;
-  }
-}
-
-class NotFoundError extends Error {
-  constructor(message) {
-    super(message);
-    this.statusCode = NOT_FOUND;
-  }
-}
-
-class ConflictError extends Error {
-  constructor(message) {
-    super(message);
-    this.statusCode = ALREADY_EXISTS;
-  }
-}
+const BadRequestError = (msg) => new AppError(msg, BAD_REQUEST);
+const UnauthorizedError = (msg) => new AppError(msg, AUTHORIZATION_REQUIRED);
+const ForbiddenError = (msg) => new AppError(msg, FORBIDDEN);
+const NotFoundError = (msg) => new AppError(msg, NOT_FOUND);
+const ConflictError = (msg) => new AppError(msg, ALREADY_EXISTS);
 
 module.exports = {
   BAD_REQUEST,
@@ -47,6 +25,7 @@ module.exports = {
   NOT_FOUND,
   ALREADY_EXISTS,
   SERVER_ERROR,
+  AppError,
   BadRequestError,
   UnauthorizedError,
   ForbiddenError,
