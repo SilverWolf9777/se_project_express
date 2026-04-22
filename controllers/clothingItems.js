@@ -21,7 +21,7 @@ const createItem = (req, res, next) => {
     .then((item) => res.status(201).send(item))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        return next(new BadRequestError("Invalid data"));
+        return next(BadRequestError("Invalid data"));
       }
       return next(err);
     });
@@ -35,7 +35,7 @@ const deleteItem = (req, res, next) => {
     .orFail()
     .then((item) => {
       if (item.owner.toString() !== req.user._id) {
-        throw new ForbiddenError("You are not allowed to delete this item");
+        throw ForbiddenError("You are not allowed to delete this item");
       }
 
       return clothingItem.findByIdAndDelete(itemId);
@@ -45,10 +45,10 @@ const deleteItem = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === "CastError") {
-        return next(new BadRequestError("Invalid item ID"));
+        return next(BadRequestError("Invalid item ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return next(new NotFoundError("Item not found"));
+        return next(NotFoundError("Item not found"));
       }
       return next(err);
     });
@@ -67,10 +67,10 @@ const likeItem = (req, res, next) => {
     .then((item) => res.status(200).send(item))
     .catch((err) => {
       if (err.name === "CastError") {
-        return next(new BadRequestError("Invalid item ID"));
+        return next(BadRequestError("Invalid item ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return next(new NotFoundError("Item not found"));
+        return next(NotFoundError("Item not found"));
       }
       return next(err);
     });
@@ -89,10 +89,10 @@ const dislikeItem = (req, res, next) => {
     .then((item) => res.status(200).send(item))
     .catch((err) => {
       if (err.name === "CastError") {
-        return next(new BadRequestError("Invalid item ID"));
+        return next(BadRequestError("Invalid item ID"));
       }
       if (err.name === "DocumentNotFoundError") {
-        return next(new NotFoundError("Item not found"));
+        return next(NotFoundError("Item not found"));
       }
       return next(err);
     });
