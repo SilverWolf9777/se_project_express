@@ -33,10 +33,10 @@ const createUser = async (req, res, next) => {
     return res.status(201).send(userWithoutPassword);
   } catch (err) {
     if (err.code === 11000) {
-      return next(new ConflictError("Email already exists"));
+      return next(ConflictError("Email already exists"));
     }
     if (err.name === "ValidationError") {
-      return next(new BadRequestError("Invalid user data"));
+      return next(BadRequestError("Invalid user data"));
     }
 
     return next(err);
@@ -55,7 +55,7 @@ const login = (req, res, next) => {
       res.send({ token });
     })
     .catch(() => {
-      next(new UnauthorizedError("Incorrect email or password"));
+      next(UnauthorizedError("Incorrect email or password"));
     });
 };
 
@@ -67,11 +67,11 @@ const getCurrentUser = (req, res, next) => {
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === "CastError") {
-        return next(new BadRequestError("Invalid user ID"));
+        return next(BadRequestError("Invalid user ID"));
       }
 
       if (err.name === "DocumentNotFoundError") {
-        return next(new NotFoundError("User not found"));
+        return next(NotFoundError("User not found"));
       }
 
       return next(err);
@@ -91,11 +91,11 @@ const updateUser = (req, res, next) => {
     .then((user) => res.status(200).send(user))
     .catch((err) => {
       if (err.name === "ValidationError") {
-        return next(new BadRequestError("Invalid user data"));
+        return next(BadRequestError("Invalid user data"));
       }
 
       if (err.name === "DocumentNotFoundError") {
-        return next(new NotFoundError("User not found"));
+        return next(NotFoundError("User not found"));
       }
 
       return next(err);
